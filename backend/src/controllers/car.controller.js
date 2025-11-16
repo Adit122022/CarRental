@@ -4,14 +4,20 @@ export const addCar = async (req, res) => {
   try {
     const owner = req.user.id;
 
-    const car = await Car.create({ ...req.body, owner });
+    const imagePaths = req.files ? req.files.map(file => file.path) : [];
+
+    const car = await Car.create({
+      ...req.body,
+      images: imagePaths,
+      owner,
+    });
 
     res.json({ message: "Car added successfully", car });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 export const buyCar = async (req, res) => {
@@ -37,6 +43,16 @@ export const buyCar = async (req, res) => {
       }
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getCars = async (req, res) => {
+  try {
+    const cars = await Car.find().populate("owner", "name email");
+    res.status(200).json(cars);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

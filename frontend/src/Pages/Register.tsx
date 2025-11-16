@@ -1,96 +1,49 @@
+// src/pages/Register.tsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const Register: React.FC = () => {
-  const { register, loading } = useAuth();
+    const { register, loading } = useAuth();
+    const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+    const [form, setForm] = useState({ name: "", email: "", password: "" });
+    const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        if (!form.name || !form.email || !form.password) {
+            setError("All fields required");
+            return;
+        }
+        try {
+            await register(form.name, form.email, form.password);
+            navigate("/");
+        } catch (err: any) {
+            setError(err?.message || "Register failed");
+        }
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    return (
+        <div className="max-w-md mx-auto mt-16 bg-muted p-6 rounded-lg shadow">
+            <h3 className="text-xl font-semibold mb-4">Create account</h3>
 
-    if (!form.name || !form.email || !form.password) {
-      alert("All fields are required!");
-      return;
-    }
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <Input placeholder="Full name" value={form.name} name="name" onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input placeholder="Email" value={form.email} name="email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Input placeholder="Password" type="password" value={form.password} name="password" onChange={(e) => setForm({ ...form, password: e.target.value })} />
 
-    await register(form.name, form.email, form.password);
-  };
+                {error && <div className="text-red-500 text-sm">{error}</div>}
 
-  return (
-    <div className="h-screen w-full flex justify-center items-center bg-gray-100">
-      <Card className="w-full max-w-md p-4 shadow-lg rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-semibold">
-            Create an Account
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div>
-              <label className="text-sm font-medium">Full Name</label>
-              <Input
-                type="text"
-                placeholder="John Doe"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <Input
-                type="email"
-                placeholder="example@mail.com"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Submit Button */}
-            <Button type="submit" disabled={loading} className="w-full mt-4">
-              {loading ? "Creating account..." : "Sign Up"}
-            </Button>
-          </form>
-
-          <p className="text-center text-sm mt-3">
-            Already have an account?{" "}
-            <a href="/login" className="text-blue-600 hover:underline">
-              Sign In
-            </a>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+                <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Creating..." : "Sign up"}
+                </Button>
+            </form>
+        </div>
+    );
 };
 
 export default Register;

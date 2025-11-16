@@ -1,29 +1,32 @@
-import { useState } from "react";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+// src/pages/Login.tsx
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../API/api";
 import { useAuth } from "../context/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 
-const Login = () => {
-    const { login } = useAuth();
+const Login: React.FC = () => {
+    const { login, loading } = useAuth();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({ email: "", password: "" });
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        try {
+            await login(form.email, form.password);
 
-        const res = await loginUser(form);
-
-        login({ email: form.email }, res.data.token);
-
-        navigate("/");
+            navigate("/");
+        } catch (err: any) {
+            setError(err?.message || "Login failed");
+        }
     };
 
     return (
-        <div className="max-w-sm mx-auto mt-20 p-6 border rounded-xl shadow">
-            <h2 className="text-xl mb-4 font-semibold">Login</h2>
+        <div className="max-w-md mx-auto mt-16 bg-muted p-6 rounded-lg shadow">
+            <h3 className="text-xl font-semibold mb-4">Login</h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
@@ -31,7 +34,6 @@ const Login = () => {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
-
                 <Input
                     type="password"
                     placeholder="Password"
@@ -39,7 +41,11 @@ const Login = () => {
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                 />
 
-                <Button className="w-full" type="submit">Login</Button>
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Logging in..." : "Login"}
+                </Button>
             </form>
         </div>
     );
